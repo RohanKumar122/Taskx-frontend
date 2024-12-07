@@ -4,6 +4,7 @@ import TaskList from './components/TaskList';
 import TaskForm from './components/TaskForm';
 import LoginForm from './components/LoginForm';
 import Header from './components/Header';
+import RegisterForm from './components/RegisterForm';
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -36,7 +37,7 @@ const App = () => {
         <main className="p-4 ">
           <Routes>
             <Route path="/login" element={<LoginForm setToken={setToken} />} />
-        
+            <Route path="/register" element={<RegisterForm />} /> {/* Add the register route */}        
             <Route path="/" element={<ProtectedRoute element={<TaskList token={token} />} />} />
             <Route path="/add" element={<ProtectedRoute element={<TaskForm token={token} />} />} />
             <Route path="/edit/:id" element={<ProtectedRoute element={<TaskForm token={token} />} />} />
