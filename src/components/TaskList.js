@@ -4,12 +4,15 @@ import delete1 from "../utils/images/delete.png";
 import add from "../utils/images/add.png";
 import tonggle from "../utils/images/tonggle.png";
 import done from "../utils/images/check.png";
+import edit from "../utils/images/edit.png";
 
 const TaskList = ({ token }) => {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("ALL"); // State for dropdown filter
+  const [isEditing, setIsEditing] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
 
   const backendapi = process.env.REACT_APP_BACKEND_API ;
   useEffect(() => {
@@ -189,11 +192,22 @@ const TaskList = ({ token }) => {
                   ? "bg-green-200 text-black-400 "
                   : "text-gray-500 bg-white"
               }`}
-              // className="bg-white p-4  mx-2 my-2  shadow-lg rounded-lg"
+  
             >
               {" "}
-              {/* Use task.id instead of task._id */}
+              <div className="flex justify-between">
+
               <h3 className="text-lg font-bold">{task.title}</h3>
+                <div className="hover:cursor-pointer" onClick={() => {
+                    setTaskToEdit(task);
+                    setIsEditing(true); 
+                  }} >
+
+
+                  <img className="w-6 h-6" src={edit} alt="description" />
+
+              </div>
+              </div>
               <p className="text-gray-600 my-2">{task.description}</p>
               <p
                 className={`font-semibold ${
@@ -300,6 +314,114 @@ const TaskList = ({ token }) => {
           ))}
         </ul>
       )}
+
+            {/* Popup Form for Editing Task */}
+            {isEditing && taskToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Edit Task</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const response = await fetch(
+                    `${backendapi}/tasks/${taskToEdit.id}`,
+                    {
+                      method: "PUT",
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify(taskToEdit),
+                    }
+                  );
+                  if (response.ok) {
+                    setTasks((prevTasks) =>
+                      prevTasks.map((task) =>
+                        task.id === taskToEdit.id ? taskToEdit : task
+                      )
+                    );
+                    setIsEditing(false);
+                  } else {
+                    throw new Error("Failed to update task");
+                  }
+                } catch (err) {
+                  alert(err.message);
+                }
+              }}
+            >
+              <div>
+                <label className="block mb-2 font-medium">Title</label>
+                <input
+                  type="text"
+                  value={taskToEdit?.title || ""}
+                  onChange={(e) =>
+                    setTaskToEdit({ ...taskToEdit, title: e.target.value })
+                  }
+                  className="block w-full p-2 border rounded"
+                />
+              </div>
+              <div className="mt-4">
+                <label className="block mb-2 font-medium">Description</label>
+                <textarea
+                  value={taskToEdit?.description || ""}
+                  onChange={(e) =>
+                    setTaskToEdit({
+                      ...taskToEdit,
+                      description: e.target.value,
+                    })
+                  }
+                  className="block w-full p-2 border rounded"
+                ></textarea>
+              </div>
+              <div className="mt-4">
+                <label className="block mb-2 font-medium">Status</label>
+                <select
+                  value={taskToEdit?.status || ""}
+                  onChange={(e) =>
+                    setTaskToEdit({ ...taskToEdit, status: e.target.value })
+                  }
+                  className="block w-full p-2 border rounded"
+                >
+                  <option value="To Do">To Do</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Done">Done</option>
+                </select>
+              </div>
+              <div className="mt-4">
+                <label className="block mb-2 font-medium">Due Date</label>
+                <input
+                  className="block w-full p-2 border rounded"
+                  type="datetime-local"
+                  value={taskToEdit.due_date}
+                  onChange={(e) =>
+                    setTaskToEdit({ ...taskToEdit, due_date: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="mt-4 flex justify-between">
+                <button
+                  type="submit"
+                  className="bg-green-500 text-white p-2 rounded"
+                >
+                  Update
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  className="bg-gray-500 text-white p-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+
     </div>
   );
 };
